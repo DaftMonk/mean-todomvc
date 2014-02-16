@@ -5,7 +5,7 @@
  * an `escape` keydown event.
  */
 angular.module('todomvcApp')
-  .directive('todoBlur', function () {
+  .directive('todoEscape', function () {
     var ESCAPE_KEY = 27;
     return function (scope, elem, attrs) {
       elem.bind('keydown', function (event) {
