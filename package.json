@@ -1,10 +1,10 @@
 {
-  "name": "todomvc",
+  "name": "meantodomvc",
   "version": "0.0.0",
   "dependencies": {
     "express": "~3.4.3",
     "lodash": "~2.4.1",
-    "mongoose": "~3.5.5",
+    "mongoose": "~3.8.8",
     "ejs": "~0.8.4"
   },
   "devDependencies": {
@@ -19,8 +19,7 @@
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-cssmin": "~0.7.0",
     "grunt-contrib-htmlmin": "~0.1.3",
-    "jpegtran-bin": "0.2.0",
-    "grunt-contrib-imagemin": "~0.3.0",
+    "grunt-contrib-imagemin": "~0.5.0",
     "grunt-contrib-jshint": "~0.7.1",
     "grunt-contrib-uglify": "~0.2.0",
     "grunt-contrib-watch": "~0.5.2",
@@ -48,7 +47,14 @@
     "karma-coffee-preprocessor": "~0.1.2",
     "karma-phantomjs-launcher": "~0.1.1",
     "karma": "~0.10.9",
-    "karma-ng-html2js-preprocessor": "~0.1.0"
+    "karma-ng-html2js-preprocessor": "~0.1.0",
+    "grunt-mocha-test": "~0.8.1",
+    "supertest": "~0.8.2",
+    "should": "~2.1.0",
+    "grunt-env": "~0.4.1",
+    "grunt-node-inspector": "~0.1.3",
+    "grunt-nodemon": "~0.2.0",
+    "open": "~0.0.4"
   },
   "engines": {
     "node": ">=0.10.0"

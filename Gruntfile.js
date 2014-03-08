@@ -1,4 +1,4 @@
-// Generated on 2014-01-29 using generator-angular-fullstack 1.2.5
+// Generated on 2014-03-08 using generator-angular-fullstack 1.3.2
 'use strict';
 
 // # Globbing
@@ -54,8 +54,12 @@ module.exports = function (grunt) {
           livereload: true
         }
       },
+      mochaTest: {
+        files: ['test/server/{,*/}*.js'],
+        tasks: ['mochaTest']
+      },
       jsTest: {
-        files: ['test/spec/{,*/}*.js'],
+        files: ['test/client/spec/{,*/}*.js'],
         tasks: ['newer:jshint:test', 'karma']
       },
       styles: {
@@ -82,7 +86,7 @@ module.exports = function (grunt) {
           'server.js',
           'lib/**/*.{js,json}'
         ],
-        tasks: ['newer:jshint:server', 'express:dev'],
+        tasks: ['newer:jshint:server', 'express:dev', 'wait'],
         options: {
           livereload: true,
           nospawn: true //Without this option specified express won't be reloaded
@@ -107,9 +111,9 @@ module.exports = function (grunt) {
       ],
       test: {
         options: {
-          jshintrc: 'test/.jshintrc'
+          jshintrc: 'test/client/.jshintrc'
         },
-        src: ['test/spec/{,*/}*.js']
+        src: ['test/client/spec/{,*/}*.js']
       }
     },
 
@@ -120,9 +124,9 @@ module.exports = function (grunt) {
           dot: true,
           src: [
             '.tmp',
-            '<%= yeoman.dist %>/views/*',
-            '<%= yeoman.dist %>/public/*',
-            '!<%= yeoman.dist %>/public/.git*',
+            '<%= yeoman.dist %>/*',
+            '!<%= yeoman.dist %>/.git*',
+            '!<%= yeoman.dist %>/Procfile'
           ]
         }]
       },
@@ -151,6 +155,40 @@ module.exports = function (grunt) {
           src: '{,*/}*.css',
           dest: '.tmp/styles/'
         }]
+      }
+    },
+
+    // Debugging with node inspector
+    'node-inspector': {
+      custom: {
+        options: {
+          'web-host': 'localhost'
+        }
+      }
+    },
+
+    // Use nodemon to run server in debug mode with an initial breakpoint
+    nodemon: {
+      debug: {
+        script: 'server.js',
+        options: {
+          nodeArgs: ['--debug-brk'],
+          env: {
+            PORT: process.env.PORT || 9000
+          },
+          callback: function (nodemon) {
+            nodemon.on('log', function (event) {
+              console.log(event.colour);
+            });
+
+            // opens browser on initial server start
+            nodemon.on('config:update', function () {
+              setTimeout(function () {
+                require('open')('http://localhost:8080/debug?port=5858');
+              }, 500);              
+            });
+          }
+        }
       }
     },
 
@@ -191,7 +229,7 @@ module.exports = function (grunt) {
     usemin: {
       html: ['<%= yeoman.dist %>/views/{,*/}*.html',
              '<%= yeoman.dist %>/views/{,*/}*.jade'],
-      css: ['<%= yeoman.dist %>/styles/{,*/}*.css'],
+      css: ['<%= yeoman.dist %>/public/styles/{,*/}*.css'],
       options: {
         assetsDirs: ['<%= yeoman.dist %>/public']
       }
@@ -231,7 +269,7 @@ module.exports = function (grunt) {
         files: [{
           expand: true,
           cwd: '<%= yeoman.app %>/views',
-          src: ['*.html', 'partials/*.html'],
+          src: ['*.html', 'partials/**/*.html'],
           dest: '<%= yeoman.dist %>/views'
         }]
       }
@@ -309,6 +347,15 @@ module.exports = function (grunt) {
       test: [
         'copy:styles'
       ],
+      debug: {
+        tasks: [
+          'nodemon',
+          'node-inspector'
+        ],
+        options: {
+          logConcurrentOutput: true
+        }
+      },
       dist: [
         'copy:styles',
         'imagemin',
@@ -349,7 +396,32 @@ module.exports = function (grunt) {
         configFile: 'karma.conf.js',
         singleRun: true
       }
+    },
+
+    mochaTest: {
+      options: {
+        reporter: 'spec'
+      },
+      src: ['test/server/**/*.js']
+    },
+
+    env: {
+      test: {
+        NODE_ENV: 'test'
+      }
     }
+  });
+
+  // Used for delaying livereload until after server has restarted
+  grunt.registerTask('wait', function () {
+    grunt.log.ok('Waiting for server reload...');
+
+    var done = this.async();
+
+    setTimeout(function () {
+      grunt.log.writeln('Done waiting!');
+      done();
+    }, 500);
   });
 
   grunt.registerTask('express-keepalive', 'Keep grunt running', function() {
@@ -359,6 +431,16 @@ module.exports = function (grunt) {
   grunt.registerTask('serve', function (target) {
     if (target === 'dist') {
       return grunt.task.run(['build', 'express:prod', 'open', 'express-keepalive']);
+    }
+
+    if (target === 'debug') {
+      return grunt.task.run([
+        'clean:server',
+        'bower-install',
+        'concurrent:server',
+        'autoprefixer',
+        'concurrent:debug'
+      ]);
     }
 
     grunt.task.run([
@@ -377,12 +459,32 @@ module.exports = function (grunt) {
     grunt.task.run(['serve']);
   });
 
-  grunt.registerTask('test', [
-    'clean:server',
-    'concurrent:test',
-    'autoprefixer',
-    'karma'
-  ]);
+  grunt.registerTask('test', function(target) {
+    if (target === 'server') {
+      return grunt.task.run([
+        'env:test',
+        'mochaTest'
+      ]);
+    }
+
+    if (target === 'client') {
+      return grunt.task.run([
+        'clean:server',
+        'concurrent:test',
+        'autoprefixer',
+        'karma'
+      ]);
+    }
+
+    grunt.task.run([
+      'env:test',
+      'mochaTest',
+      'clean:server',
+      'concurrent:test',
+      'autoprefixer',
+      'karma'
+    ]);
+  });  
 
   grunt.registerTask('build', [
     'clean:dist',
